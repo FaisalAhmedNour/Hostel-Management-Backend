@@ -30,6 +30,7 @@ async function run() {
         const studentsCollection = client.db("CampSportopia").collection("students");
         const finesCollection = client.db("CampSportopia").collection("fines");
         const complaintsCollection = client.db("CampSportopia").collection("complaints");
+        const noticesCollection = client.db("CampSportopia").collection("notices");
 
         // -------------users------------
         // get users
@@ -287,6 +288,14 @@ async function run() {
             res.send(result);
         })
 
+        // get students
+        app.get('/students/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const result = await studentsCollection.findOne(query);
+            res.send(result);
+        })
+
         // delete student
         app.get('/students/delete/:id', async (req, res) => {
             const id = req.params.id;
@@ -371,11 +380,9 @@ async function run() {
         })
 
         // add complaints
-        app.post('/complaints/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
+        app.post('/complaints', async (req, res) => {
+            // const existingUser = {};
             const fineDetails = req.body;
-
             // Get the current date
             const currentDate = new Date();
             const formattedDate = currentDate.toLocaleDateString('en-US', {
@@ -384,21 +391,14 @@ async function run() {
                 year: 'numeric'
             });
 
-            const existingUser = await studentsCollection.findOne(query);
-
-            // Remove the _id property from the existingUser object
-            delete existingUser._id;
-
-            // Add fineComplaint and fineAmount properties
-            existingUser.nonFineComplaint = fineDetails.description;
-            // existingUser.fineAmount = fineDetails.fineAmount;
+            // existingUser.nonFineComplaint = fineDetails.description;
 
             // Add the current date property
-            existingUser.date = formattedDate;
-            existingUser.solved = false;
+            fineDetails.date = formattedDate;
+            fineDetails.solved = false;
 
             // Insert the modified user object into finesCollection
-            const result = await complaintsCollection.insertOne(existingUser);
+            const result = await complaintsCollection.insertOne(fineDetails);
 
             res.send(result);
         });
@@ -427,6 +427,32 @@ async function run() {
             // console.log(query);
             const result = await complaintsCollection.updateOne(filter, updateDoc, options);
             res.send(result)
+        });
+
+        // get notices
+        app.get('/notices', async (req, res) => {
+            const result = await noticesCollection.find().toArray();
+            // console.log(result);
+            res.send(result);
+        })
+
+        // add notice
+        app.post('/notices', async (req, res) => {
+            const noticeDetails = req.body;
+            const currentDate = new Date();
+            const formattedDate = currentDate.toLocaleDateString('en-US', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+
+            // Add the current date property
+            noticeDetails.date = formattedDate;
+
+            // Insert the modified user object into finesCollection
+            const result = await noticesCollection.insertOne(noticeDetails);
+
+            res.send(result);
         });
 
         // Send a ping to confirm a successful connection
