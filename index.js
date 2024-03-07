@@ -283,7 +283,8 @@ async function run() {
 
         // get students
         app.get('/students', async (req, res) => {
-            const result = await studentsCollection.find().toArray();
+            const query = { role: 'student' };
+            const result = await studentsCollection.find(query).toArray();
             // console.log("asidjfioa", result);
             res.send(result);
         })
